@@ -19,7 +19,6 @@ namespace OPERACION_PAQL.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(User user)
         {
-            //string mainconn = ConfigurationManager.ConnectionString[]
             if(user.Username == null)
             {
                 return View();
@@ -30,7 +29,7 @@ namespace OPERACION_PAQL.Controllers
 
             if(resultU == null || resultP == null)
             {
-                return View();
+                return View("Login");
             }
 
             return RedirectToAction("index", "customers", null);
