@@ -4,12 +4,26 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Lista de Clientes</h1>
 
 <p>
     <a asp-action="Create">Crear Cliente</a>
 </p>
-<table class="table">
+
+<div class="col-4 p-0 justify-content-end">
+    <form asp-controller="customers" asp-action="Index">
+        <p>Buscar por:</p>
+        <input type="radio" value="CI" name="searchBy" /><label>CI</label>
+        <input type="radio" value="Cuenta" name="searchBy" /><label>Cuenta</label>
+        <br />
+        <span class="btn-group">
+            <input class="form-control" type="text" name="search" />
+            <input class="p-1 col-md-12 btn btn-sm btn-info" type="submit" value="Buscar"/>
+        </span>
+    </form>
+</div>
+
+<table class="table table-striped" border="1">
     <thead>
         <tr>
             <th>
@@ -35,9 +49,6 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
             </th>
             <th></th>
         </tr>
@@ -70,12 +81,9 @@
                 @Html.DisplayFor(modelItem => item.Email)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Detalles</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Eliminar</a>
+                <a asp-controller="accounts" asp-action="Index" asp-route-id="@item.Id">Cuentas</a> |
+                <a asp-controller="accounts" asp-action="Create" asp-route-id="@item.Id">Generar Cuenta</a>
             </td>
         </tr>
 }

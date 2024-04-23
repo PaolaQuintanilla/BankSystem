@@ -4,46 +4,37 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.EntityFrameworkCore;
 using OPERACION_PAQL.Models;
 
 namespace OPERACION_PAQL.Controllers
 {
-    public class CustomersController : Controller
+    public class AccountsController : Controller
     {
         private readonly BdClientesPaqlContext _context;
 
-        public CustomersController(BdClientesPaqlContext context)
+        public AccountsController(BdClientesPaqlContext context)
         {
             _context = context;
         }
 
-        // GET: Customers
-        public async Task<IActionResult> Index(string searchBy = "", string search = "")
+        // GET: Accounts
+        public async Task<IActionResult> Index(int? id = null)
         {
-            if (searchBy == "CI")
+            if(id != null)
             {
-                return View(await _context.Customers.Where(x => x.Ci == search || search == null).Include(x => x.Accounts).ToListAsync());
+                return View(await _context.Accounts.Where(a => a.CustomerId == id).ToListAsync());
             }
-            else if (searchBy == "Cuenta")
-            {
-                return View(await _context.Accounts.Where(x => x.BankAccount == search).Select(x => x.Customer).ToListAsync());
-            }
-            return View(await _context.Customers.ToArrayAsync());
-        }
-        public async Task<IActionResult> SearchByType(string searchBy, string search)
-        {
-            if(searchBy == "CI")
-            {
-                return View(await _context.Customers.Where(x => x.Ci == search || search == null).ToListAsync());
-            } else
-            {
-                return View(await _context.Accounts.Where(x => x.BankAccount == search).ToListAsync());
-            }
-
+            var bdClientesPaqlContext = _context.Accounts.Include(a => a.Customer);
+            return View(await bdClientesPaqlContext.ToListAsync());
         }
 
-        // GET: Customers/Details/5
+        // GET: Accounts/Details/5
+        public async Task<IActionResult> GetAccounts(int? id)
+        {
+            return View(await _context.Accounts.Where(a => a.CustomerId == id).ToListAsync());
+        }
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -51,39 +42,45 @@ namespace OPERACION_PAQL.Controllers
                 return NotFound();
             }
 
-            var customer = await _context.Customers
+            var account = await _context.Accounts
+                .Include(a => a.Customer)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (customer == null)
+            if (account == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(account);
         }
 
-        // GET: Customers/Create
+        // GET: Accounts/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Customers/Create
+        // POST: Accounts/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Names,MotherLastName,FatherLastName,Ci,Birthday,Gender,Cellphone,Email,CreatedAt")] Customer customer)
+        public async Task<IActionResult> Create([Bind("CustomerId,BankAccount,IncomeLevel,RegistrationDate,UpdatedDate")] Account account)
         {
+            Random rd = new Random();
+            account.CustomerId = Convert.ToInt32(Url.ActionContext.RouteData.Values["Id"]);
+            account.BankAccount = rd.Next(100, 200).ToString();
             if (ModelState.IsValid)
             {
-                _context.Add(customer);
+                _context.Add(account);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("index", "accounts", new { id = account.CustomerId } );
             }
-            return View(customer);
+
+
+            return View(account);
         }
 
-        // GET: Customers/Edit/5
+        // GET: Accounts/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -91,22 +88,23 @@ namespace OPERACION_PAQL.Controllers
                 return NotFound();
             }
 
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null)
+            var account = await _context.Accounts.FindAsync(id);
+            if (account == null)
             {
                 return NotFound();
             }
-            return View(customer);
+            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Id", account.CustomerId);
+            return View(account);
         }
 
-        // POST: Customers/Edit/5
+        // POST: Accounts/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Names,MotherLastName,FatherLastName,Ci,Birthday,Gender,Cellphone,Email,CreatedAt")] Customer customer)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CustomerId,BankAccount,IncomeLevel,RegistrationDate,UpdatedDate")] Account account)
         {
-            if (id != customer.Id)
+            if (id != account.Id)
             {
                 return NotFound();
             }
@@ -115,12 +113,12 @@ namespace OPERACION_PAQL.Controllers
             {
                 try
                 {
-                    _context.Update(customer);
+                    _context.Update(account);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CustomerExists(customer.Id))
+                    if (!AccountExists(account.Id))
                     {
                         return NotFound();
                     }
@@ -129,12 +127,14 @@ namespace OPERACION_PAQL.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("index", "accounts", new { id = account.CustomerId });
             }
-            return View(customer);
+            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "Id", account.CustomerId);
+
+            return View(account);
         }
 
-        // GET: Customers/Delete/5
+        // GET: Accounts/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -142,34 +142,35 @@ namespace OPERACION_PAQL.Controllers
                 return NotFound();
             }
 
-            var customer = await _context.Customers
+            var account = await _context.Accounts
+                .Include(a => a.Customer)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (customer == null)
+            if (account == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(account);
         }
 
-        // POST: Customers/Delete/5
+        // POST: Accounts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer != null)
+            var account = await _context.Accounts.FindAsync(id);
+            if (account != null)
             {
-                _context.Customers.Remove(customer);
+                _context.Accounts.Remove(account);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CustomerExists(int id)
+        private bool AccountExists(int id)
         {
-            return _context.Customers.Any(e => e.Id == id);
+            return _context.Accounts.Any(e => e.Id == id);
         }
     }
 }

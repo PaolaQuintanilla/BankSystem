@@ -15,6 +15,8 @@ public partial class Customer
     public string FatherLastName { get; set; } = null!;
 
     public string Ci { get; set; } = null!;
+    [MinimumAge(18)]
+    [DataType(DataType.Date), DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
     [Display(Name = "Fecha de Nacimiento")]
     public DateTime Birthday { get; set; }
     [Display(Name = "Genero")]

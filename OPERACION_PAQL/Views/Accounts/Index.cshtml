@@ -1,0 +1,55 @@
+﻿@model IEnumerable<OPERACION_PAQL.Models.Account>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Cuentas</h1>
+
+<table class="table table-striped" border="1">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.BankAccount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.IncomeLevel)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RegistrationDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UpdatedDate)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.BankAccount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IncomeLevel)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RegistrationDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UpdatedDate)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+<div>
+    <a asp-controller="customers" asp-action="Index">lista de Clientes</a>
+</div>
+
